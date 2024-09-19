@@ -1,0 +1,30 @@
+project:
+  type: book
+
+book:
+  title: "Computational Physics"
+  author: "Jim Brooke"
+  date: "16 Sept 2024"
+  page-navigation: true
+  chapters:
+    - index.qmd
+    - linalg-1.qmd
+    - linalg-2.qmd
+    - linalg-3.qmd
+    - pde-1.qmd
+    - pde-2.qmd
+    - mc-1.qmd
+    - mc-2.qmd
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    toc: true
+    chunked: true
+  pdf:
+    documentclass: scrreprt
+  epub:
+    cover-image: 
+
