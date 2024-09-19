@@ -1,0 +1,50 @@
+---
+title: "Untitled"
+format: html
+---
+
+## Further Analysis
+
+It is interesting to further analyse the results obtained from our example code.
+
+First, we can verify that the generated distributions are comparable to the desired $\sin(x)$ PDF by considering the residuals.
+
+```{python}
+# calculate residuals wrt ideal function
+rs1 = 2*hist1/np.sin(bin_centres) - 1
+rs2 = 2*hist2/np.sin(bin_centres) - 1
+
+histr1, binsr1, patches = plt.hist(rs1, bins=15, label="analytic")
+plt.hist(rs2, bins=binsr1, label='accept/reject')
+plt.legend()
+plt.xlabel(r'$\frac{P{gen} - P_{ideal}}{P_{ideal}}$')
+plt.show()
+
+print("Analytic      : residual mean = {0:.2e}, std dev = {1:.2e}".format(np.mean(rs1), np.std(rs1)))
+print("Accept/reject : residual mean = {0:.2e}, std dev = {1:.2e}".format(np.mean(rs2), np.std(rs2)))
+```
+
+This is qualitatively similar to a Normal distribution, and the mean values are clearly compatible with zero within 1 sigma. The standard deviation is approximately what we expect given that we have on average 1000 events per bin, corresponding to a Poisson error of 3%.
+
+Finally, we can also examine the cpu time required by each method.
+
+```{python}
+# cpu time
+from timeit import Timer
+
+# time 10,000 calls to each function, and repeat 3 times
+# see Code Performance notebook for more details
+n = int(1e5)
+t_ana  = min(Timer(lambda : randSinAna()).repeat(number=n, repeat=3))/n
+t_ar   = min(Timer(lambda : randSinAR()).repeat(number=n, repeat=3))/n
+t_acos = min(Timer(lambda : np.arccos(0.5)).repeat(number=n, repeat=3))/n
+
+print()
+print("Mean time analytic = {0:.2e} s".format(t_ana))
+print("Mean time AR       = {0:.2e} s".format(t_ar))
+print("Mean time arccos   = {0:.2e} s".format(t_acos))
+```
+
+The accept/reject method is slower, as expected.  A minimum two calls to np.random.random() are required to per number produced.  The actual number of calls is somewhat higher, since the while loop will occasionally require 4 calls, or more.  However, the results obtained suggest accept/reject is a factor 1.9 slower than the analytic method.  This is consistent with the `arccos()` call taking a significant fraction (about half) of the time taken by the analytic method.
+
+

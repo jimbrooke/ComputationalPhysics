@@ -1,0 +1,18 @@
+---
+title: "Introduction"
+format: html
+execute:
+  error: true
+---
+
+Welcome to the course material for Computational Physics.
+
+The course covers 3 broad topics :
+
+- Linear Algebra (Sections 2-4)
+- Partial Differential Equations (Section 5 & 6)
+- Monte Carlo Methods (Sections 7 & 8)
+
+Each section describes a class of numerical methods, and will cover both the mathematical background, and use of relevant scipy routines with Python code examples. In addition there are several fully worked examples of solving physics problems. You may wish to copy the code examples to a Jupyter notebook to fully explore them.
+
+This book was built with Quarto <https://quarto.org/>.

@@ -1,0 +1,92 @@
+---
+title: "Boundary Value Problems"
+format: html
+---
+
+In a boundary value problem, we aim to find the solution to a partial differential equation, which satisfies some boundary conditions. The boundary conditions may be classified :
+
+- *Dirichlet* : the value of the _solution_ is defined on the boundary
+- *Neumann* : the value of the _derivative_ is defined on the boundary
+- *Cauchy* : _both_ the value and derivative of the solution are defined on the boundary
+- *Robin* : a _linear combination_ of the value and derivative is defined on the boundary
+
+A wide range of numerical methods have been developed for solving such problems. In this course, we will study *Finite difference methods*. Here, the solution is approximated by a set of points on a (usually regular) grid or mesh. The derivatives of the solution then become a set of finite differences between the points on the grid. The problem is then reduced to a (potentially rather large) set of simultaneous equations, i.e. it becomes a matrix problem. These problems can sometimes be solved directly using e.g. LU decomposition when the matrix is relatively small. More commonly, an iterative method may be used to find a solution. In this section we will study how finite difference equations can be set up to solve a given PDE, followed by some simple iterative methods that can be used to find solutions.
+
+## Finite Difference Equations {#sec-fde}
+
+Finite difference equations for a given partial differential equation can be obtained using Taylor expansion. Using a 1-dimensional example for simplicity, we have a function $f(x)$, represented on a set of points $x_i$ with equal spacing $\Delta(x)=h$. We aim to find approximations for the derivatives of $f(x)$.  First we can write the Taylor expansion about $f(x+h)$ :
+
+$$f(x+h) = f(x)+ hf'(x)+\frac{h^2}{2!}f''(x) + \frac{h^3}{3!}f'''(x) + \mathcal{O}(h^4)$$  {#eq-a}
+
+Re-arranging gives us an equation for $f'(x)$ known as the "forward difference" approximation :
+$$
+f'(x) =\frac{f(x+h)-f(x)}{h}+\mathcal{O}(h^2)
+$$  {#eq-b}
+
+Or in terms of our discrete grid of points :
+$$
+f'(x_i) = \frac{f(x_{i+1})-f(x_i)}{h}+\mathcal{O}(h^2)
+$$ {#eq-c}
+
+In a similar way, we can obtain the "backwards difference" approximation :
+
+$$
+f'(x) =\frac{f(x)-f(x-h)}{h}+\mathcal{O}(h^2)
+$$ {#eq-d}
+
+And in terms of $x_i$ :
+$$
+f'(x_i) = \frac{f(x_i)-f(x_{i-1})}{h}+\mathcal{O}(h^2)
+$$ {#eq-e}
+
+These are 1st order approximations, since the error is proportional to $h^2$.
+
+For the 2nd derivative, we can sum Taylor expansions about $(x-h)$ and $(x+h)$ to obtain :
+
+$$
+f(x-h) + f(x+h) = 2f(x)+h^2f''(x)+\mathcal{O}(h^4)
+$$ {#eq-f}
+
+Since the terms in $h^3$ cancel.
+
+This leads to 
+$$
+f''(x)=\frac{f(x+h) - 2f(x)+f(x-h)}{h^2} + \mathcal{O}(h^4)
+$$ {#eq-g}
+
+Or in terms of $x_i$ :
+$$
+f''(x)=\frac{f(x_{i+1}) - 2f(x_i)+f(x_{i-1})}{h^2} + \mathcal{O}(h^4)
+$$ {#eq-h}
+
+We can use this approach to find a numerical approximation for any derivative, to any desired order. In some cases, we will have more than one equation, due to the "forward/backward" differences.
+
+Note that, when written in terms of $x_i$ we are now dealing with sets of equations.  If we have $N$ points, i.e. $0 < i < N$, then we have N equations, which can be written in matrix form.
+
+Once we have a set of finite difference equations, we need a method to find a solution to them.
+
+<!-- In the examples below, I will illustrate the method using the 2D Laplace equation as an example :
+
+$$ \nabla^2V(x,y) = 0 $$
+
+Where the solution $V$ is found on a discrete grid of points $x_i, y_j$, i.e. $V_{i,j}=V(x_i, y_j)$. Then the finite difference equation is
+
+$$V_{i,j}=\frac{V_{i-1,j}+V_{i+1,j}+V_{i,j-1}+V_{i,j+1}}{4}$$ -->
+
+## Relaxation Methods {#sec-relax}
+
+The methods for finding a solution described below are all examples of "relaxation" methods. Here we start from an arbitrary set of values on the grid, and we repeatedly apply a recurrence relation (based on the finite difference equations) to find a solution. Iteration stops when some convergence condition has been met (typically based on the change in values between iterations). Note that this is conceptually similar to the time evolution of a system going from some non-equilibrium state to equilibrium.
+
+Also, during each iteration we must ensure the boundary conditions are adhered to. For Dirichlet conditions, this will mean ensuring the value of boundary nodes are constant. For Neumann conditions it will mean ensuring differences between nodes are constant.
+
+### Jacobi Method
+
+In this method, we calculate a "new" value for each node from the finite difference equation, using "old" values as input. i.e. the recurrence relation is simply the full set of finite difference equations. This means we must store two copies of the grid at all times, but it does mean we can compute multiple nodes in parallel.  (Actually achieving parallel processing is beyond the scope of this course !)
+
+### Gauss-Seidel Method
+
+This method is similar to the Jacobi method, but we store only one copy of the grid. This means each node is updated in turn, using a mixture of old and new grid values. While storing only one copy may be an advantage for large problems, this does mean that nodes cannot be computed in parallel.
+
+## Successive Over-relaxation
+
+This is the same as the Gauss-Seidel method, but we now _over-correct_ each node by some amount, controlled by a parameter $\omega$. This over-correction allows the method to converge more quickly for well chosen values of $\omega$.

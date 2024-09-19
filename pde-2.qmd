@@ -1,0 +1,94 @@
+---
+title: "Diffusive Initial Value Problems"
+format: html
+---
+
+Initial value problems are those in which a system described by a partial differential equation has a known state at some time, $t_0$, and we wish to calculate the state at some later time, $t_1$. Diffusive problems are those described by a PDE which includes both spatial and temporal derivatives of a function. These problems may or may not be constrained by additional boundary conditions in the spatial dimension.
+
+Such problems can be solved using finite difference methods. Finite difference equations can be constructed using the same techniques as described in [@sec-fde]. However, the presence of derivatives in both time and space results in a greater number of possible FDEs.
+
+Here we will use the 1D diffusion equation as an example.
+
+$$\frac{\partial u}{\partial t} = k \frac{\partial^2 u}{\partial x^2}$$ {#eq-a}
+
+We will solve this equation numerically on a uniform grid of points separated by $\Delta x = h$ in space, and by $\Delta t= \tau$ in time. We will use _subscripts_ to denote spatial indices, and _superscripts_ to denote temporal indices. So $u_i^n$ is the value of $u$ at the i-th position in space and the n-th in time.
+
+## Explicit Method
+
+In this method, we use the "forward difference" version of the temporal 1st derivative, and the 2nd order spatial 2nd derivative, both derived in [@sec-fde]. This leads to
+
+$$
+\frac{u_i^{n+1} - u_i^n}{\tau}=\frac{u_{i+1}^n - 2u_i^n+u_{i-1}^n}{h^2}
+$$ {#eq-b}
+
+By collecting terms in $u^{n+1}$ and $u^n$ we obtain
+
+$$
+u_i^{n+1} = u_i^n + \frac{\tau}{h^2} (u_{i+1}^n - 2u_i^n+u_{i-1}^n)
+$$ {#eq-c}
+
+This equation expresses the state of the system at timestep $n+1$ (on the LHS) to those at the previous timestep $n$ (on the RHS). If we know the state of the system at timestep zero (i.e. $u_i^0$) we can then determine the state at all future times by repeatedly applying the equation. Due to the choice of finite difference equations, this method is also known as a Forward Time Centred Space scheme. The updated value of a node at timestep $n+1$ depends on its value at the previous timestep, along with those of its neighbours.
+
+Unfortunately, this method is not stable for all values of the parameters ($k$, $\tau$, $h$). It can be shown that the condition for stability is :
+$$\frac{2 k \tau}{h^2} < 1$$
+
+What this means physically is that the timestep $\tau$ must be less than the diffusion time across a spatial step $h$. So in order to simulate spatial scales $\lambda$ (with $\lambda >> h$, we will need to run for at least $\frac{\lambda^2}{h^2}$ timesteps., which can be prohibitively slow.
+
+## Implicit Method
+
+The implicit method does not suffer from the stability issues of the explicit method.  It differs in the choice of the finite difference equation used for the temporal 1st derivative. Here we use the "backwards difference" equation derived in [@sec-fde].
+
+$$
+\frac{u_i^{n} - u_i^{n-1}}{\tau}=\frac{u_{i+1}^n - 2u_i^n+u_{i-1}^n}{h^2}
+$$ {#eq-d}
+
+Collecting terms in the same temporal index now gives 
+
+$$
+u_i^{n-1} = u_i^n - \frac{\tau}{h^2} (u_{i+1}^n - 2u_i^n+u_{i-1}^n)
+$$ {#eq-e}
+
+Now we have an equation which seems to do the opposite of the previous method - if we apply it repeatedly, we step backwards in time. And indeed, this method is known as Backwards Time Centred Space.
+
+It might seem that this equation is unhelpful, since we generally know the initial state of the system and want to predict its evolution into the future. However, this is a linear set of equations. In order to transform the system from timestep $n$ to $n+1$ we now have to _solve_ that set of linear equations. It helps to write the set of equations in matrix form :
+
+$$u^{n-1} = A u^n{n}$$ {#eq-f}
+
+Here $u^{n+1}$ and $u^n$ are both vectors containing the spatial elements of the grid at a single timestep, and the elements of matrix $A$ are given by :
+
+$$
+\begin{aligned}
+A_{j,j} &= 1 + 2 \alpha \\
+A_{j,j+1} &= A_{j+1,j} = - \alpha
+\end{aligned}
+$$ {#eq-g}
+
+Where $\alpha = \frac{k \tau}{h^2}$. 
+In a simplified version with only 4 spatial indices, $A$ would look like this :
+
+$$
+\begin{array}{cccc}
+1+2\alpha & -\alpha & 0 & 0 \\
+-\alpha & 1+2\alpha & -\alpha & 0 \\
+0 & -\alpha & 1+2\alpha & -\alpha \\
+0 & 0 & -\alpha & 1+2\alpha \\
+\end{array}
+$$ {#eq-h}
+
+Once we have constructed the matrix, we can obtain $u^{n+1}$ from $u^n$, by using the techniques described in Chapter 3 to solve [@eq-f].
+
+## Crank-Nicholson Method
+
+[@eq-d] used in the Implicit method can be written in terms of $u^n$ and $u^{n+1}$ (as for the Explicit method), i.e. :
+
+$$
+\frac{u_i^{n+1} - u_i^{n}}{\tau}=\frac{u_{i+1}^{n+1} - 2u_i^{n+1}+u_{i-1}^{n+1}}{h^2}
+$$ {#eq-i}
+
+The Crank-Nicholson method is obtained by replacing the RHS with the average of the RHS in equations [@eq-b] and [@eq-i].
+
+$$
+\frac{u_i^{n+1} - u_i^{n}}{\tau}=\frac{1}{h^2} (u_{i+1}^{n+1} - 2u_i^{n+1}+u_{i-1}^{n+1} + u_{i+1}^n - 2u_i^n+u_{i-1}^n)
+$$ {#eq-k}
+
+Like the Implicit method, this method is unconditionally stable, and the state at each timestep must be obtained by solving the linear set of equations. Writing the equation above as a matrix equation is left as an exercise for the interested reader. 
